@@ -22,12 +22,24 @@ const products = productsFromServer.map((product) => {
 });
 
 export const App = () => {
-  const [visibleProduct, setVisibleProduct] = useState(products);
+  const [filteredProducts, setFilteredProducts] = useState(products);
   const [selectedUser, setSelectedUser] = useState('all');
   const [query, setQuery] = useState('');
-  let visibleProd = visibleProduct
+
+  const visibleProducts = filteredProducts
     .filter(({ name }) => name.toLowerCase()
       .includes(query.toLowerCase()));
+
+  function filteredByOwner(name) {
+    setSelectedUser(name);
+    setFilteredProducts(products.filter(({ user }) => user.name === name));
+  }
+
+  function resetAllFilters() {
+    setFilteredProducts(products);
+    setSelectedUser('all');
+    setQuery('');
+  }
 
   return (
     <div className="section">
@@ -47,7 +59,7 @@ export const App = () => {
                 })}
                 onClick={() => {
                   setSelectedUser('all');
-                  setVisibleProduct(products);
+                  setFilteredProducts(products);
                 }}
               >
                 All
@@ -64,13 +76,7 @@ export const App = () => {
                     className={cn({
                       'is-active': selectedUser === name,
                     })}
-                    onClick={() => {
-                      setSelectedUser(name);
-                      const selectedUserProduct = [...products]
-                        .filter(({ user: userName }) => userName.name === name);
-
-                      setVisibleProduct(selectedUserProduct);
-                    }}
+                    onClick={() => filteredByOwner(name)}
                   >
                     {name}
                   </a>
@@ -86,9 +92,7 @@ export const App = () => {
                   className="input"
                   placeholder="Search"
                   value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                  }}
+                  onChange={e => setQuery(e.target.value)}
                 />
 
                 <span className="icon is-left">
@@ -113,41 +117,24 @@ export const App = () => {
               <a
                 href="#/"
                 data-cy="AllCategories"
-                className="button is-success mr-6 is-outlined"
+                className="button mr-6 outlined is-success"
               >
                 All
               </a>
 
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1 is-info"
-                href="#/"
-              >
-                Category 1
-              </a>
+              {categoriesFromServer.map((category) => {
+                const { title } = category;
 
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1"
-                href="#/"
-              >
-                Category 2
-              </a>
-
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1 is-info"
-                href="#/"
-              >
-                Category 3
-              </a>
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1"
-                href="#/"
-              >
-                Category 4
-              </a>
+                return (
+                  <a
+                    data-cy="Category"
+                    href="#/"
+                    className="button mr-2 my-1 is-info"
+                  >
+                    {title}
+                  </a>
+                );
+              })}
             </div>
 
             <div className="panel-block">
@@ -155,9 +142,7 @@ export const App = () => {
                 data-cy="ResetAllButton"
                 href="#/"
                 className="button is-link is-outlined is-fullwidth"
-                onClick={() => {
-                  visibleProd = products;
-                }}
+                onClick={resetAllFilters}
               >
                 Reset all filters
               </a>
@@ -166,7 +151,7 @@ export const App = () => {
         </div>
 
         <div className="box table-container">
-          {!visibleProd.length ? (
+          {!visibleProducts.length ? (
             <p data-cy="NoMatchingMessage">
               No products matching selected criteria
             </p>
@@ -228,7 +213,7 @@ export const App = () => {
               </thead>
 
               <tbody>
-                {visibleProd.map((product) => {
+                {visibleProducts.map((product) => {
                   const { id, name, user, category } = product;
 
                   return (
